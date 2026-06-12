@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ToolNest — Free Online Tools & Mini Apps</title>
+  <meta name="description" content="Free online tools: task manager, Arabic keyboard, Islamic Du'a, Sudoku, and more. No sign-up needed." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f13;
+      --surface: #18181f;
+      --surface2: #21212b;
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.16);
+      --text: #f0eff5;
+      --muted: #9b99a8;
+      --accent: #7c6af7;
+      --accent-light: #a89cf8;
+      --accent-glow: rgba(124,106,247,0.15);
+      --green: #34d399;
+      --amber: #fbbf24;
+      --coral: #f87171;
+      --teal: #2dd4bf;
+      --pink: #f472b6;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --font: 'Inter', system-ui, sans-serif;
+      --font-ar: 'Amiri', serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: var(--font); cursor: pointer; border: none; }
+
+    /* ===== HEADER ===== */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,15,19,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+    }
+    .header-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .logo {
+      font-size: 1.15rem; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .logo-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--accent); display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+    }
+    .logo span { color: var(--accent-light); }
+    nav { display: flex; gap: 4px; }
+    nav a {
+      font-size: 0.85rem; color: var(--muted); padding: 6px 12px;
+      border-radius: var(--radius-sm); transition: color 0.2s, background 0.2s;
+    }
+    nav a:hover { color: var(--text); background: var(--surface); }
+
+    /* ===== HERO ===== */
+    .hero {
+      max-width: 1100px; margin: 0 auto;
+      padding: 5rem 1.5rem 3.5rem;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block; margin-bottom: 1.25rem;
+      background: var(--accent-glow); border: 1px solid rgba(124,106,247,0.3);
+      color: var(--accent-light); font-size: 0.78rem; letter-spacing: 0.06em;
+      padding: 5px 14px; border-radius: 999px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 600; line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent-light); }
+    .hero p {
+      font-size: 1.05rem; color: var(--muted); max-width: 520px;
+      margin: 0 auto 2rem;
+    }
+    .hero-arabic {
+      font-family: var(--font-ar); font-size: 1.4rem;
+      color: var(--amber); letter-spacing: 0.02em;
+      margin-bottom: 2.5rem; direction: rtl;
+    }
+
+    /* ===== AD BANNER (top) ===== */
+    .ad-banner {
+      max-width: 1100px; margin: 0 auto 1rem;
+      padding: 0 1.5rem;
+    }
+    .ad-placeholder {
+      background: var(--surface);
+      border: 1px dashed var(--border-hover);
+      border-radius: var(--radius-sm);
+      height: 90px; display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 0.78rem; letter-spacing: 0.05em;
+    }
+
+    /* ===== CATEGORY FILTER ===== */
+    .categories {
+      max-width: 1100px; margin: 0 auto 2rem;
+      padding: 0 1.5rem;
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .cat-btn {
+      padding: 7px 16px; border-radius: 999px; font-size: 0.82rem; font-weight: 500;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); transition: all 0.2s;
+    }
+    .cat-btn:hover, .cat-btn.active {
+      background: var(--accent-glow); border-color: rgba(124,106,247,0.4);
+      color: var(--accent-light);
+    }
+
+    /* ===== TOOL GRID ===== */
+    .tool-grid {
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    /* ===== TOOL CARD ===== */
+    .tool-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s, background 0.2s;
+      display: flex; flex-direction: column; gap: 10px;
+      position: relative; overflow: hidden;
+    }
+    .tool-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--card-glow, transparent);
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .tool-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+    .tool-card:hover::before { opacity: 1; }
+
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.35rem; background: var(--icon-bg, var(--surface2));
+      flex-shrink: 0;
+    }
+    .card-title { font-size: 0.97rem; font-weight: 600; }
+    .card-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; flex: 1; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+    .card-tag {
+      font-size: 0.7rem; padding: 3px 9px; border-radius: 999px;
+      background: var(--tag-bg, var(--surface2)); color: var(--tag-color, var(--muted));
+    }
+    .card-cta {
+      font-size: 0.78rem; color: var(--accent-light);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .card-cta::after { content: '→'; }
+
+    /* Card color themes */
+    .card-purple { --icon-bg: rgba(124,106,247,0.15); --card-glow: radial-gradient(ellipse at top left, rgba(124,106,247,0.06), transparent 60%); --tag-bg: rgba(124,106,247,0.12); --tag-color: #a89cf8; }
+    .card-green  { --icon-bg: rgba(52,211,153,0.12);  --card-glow: radial-gradient(ellipse at top left, rgba(52,211,153,0.05), transparent 60%);  --tag-bg: rgba(52,211,153,0.1);   --tag-color: #34d399; }
+    .card-amber  { --icon-bg: rgba(251,191,36,0.12);  --card-glow: radial-gradient(ellipse at top left, rgba(251,191,36,0.05), transparent 60%);  --tag-bg: rgba(251,191,36,0.1);   --tag-color: #fbbf24; }
+    .card-coral  { --icon-bg: rgba(248,113,113,0.12); --card-glow: radial-gradient(ellipse at top left, rgba(248,113,113,0.05), transparent 60%); --tag-bg: rgba(248,113,113,0.1);  --tag-color: #f87171; }
+    .card-teal   { --icon-bg: rgba(45,212,191,0.12);  --card-glow: radial-gradient(ellipse at top left, rgba(45,212,191,0.05), transparent 60%);  --tag-bg: rgba(45,212,191,0.1);   --tag-color: #2dd4bf; }
+    .card-pink   { --icon-bg: rgba(244,114,182,0.12); --card-glow: radial-gradient(ellipse at top left, rgba(244,114,182,0.05), transparent 60%); --tag-bg: rgba(244,114,182,0.1);  --tag-color: #f472b6; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.72); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-hover);
+      border-radius: 18px;
+      width: 100%; max-width: 700px;
+      max-height: 90vh; overflow-y: auto;
+      padding: 0;
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--surface); z-index: 1;
+    }
+    .modal-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--surface2); color: var(--muted);
+      font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .modal-close:hover { background: var(--border); color: var(--text); }
+    .modal-body { padding: 1.5rem; }
+
+    /* ===== COMING SOON CARD ===== */
+    .coming-soon .card-title::after {
+      content: 'Soon'; font-size: 0.65rem; background: var(--surface2);
+      color: var(--muted); padding: 2px 7px; border-radius: 999px;
+      margin-left: 8px; vertical-align: middle;
+    }
+    .coming-soon { opacity: 0.65; cursor: default; }
+    .coming-soon:hover { transform: none; }
+
+    /* ===== TASK MANAGER TOOL ===== */
+    .task-input-row { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+    .task-input {
+      flex: 1; padding: 10px 14px; border-radius: var(--radius-sm);
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); font-size: 0.9rem; font-family: var(--font);
+      outline: none; transition: border-color 0.2s;
+    }
+    .task-input:focus { border-color: var(--accent); }
+    .task-add-btn {
+      padding: 10px 18px; border-radius: var(--radius-sm);
+      background: var(--accent); color: #fff; font-size: 0.88rem; font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .task-add-btn:hover { opacity: 0.85; }
+    .task-filters { display: flex; gap: 6px; margin-bottom: 1rem; }
+    .tf-btn {
+      padding: 5px 12px; border-radius: 999px; font-size: 0.78rem;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+      transition: all 0.2s;
+    }
+    .tf-btn.active { background: var(--accent-glow); border-color: rgba(124,106,247,0.4); color: var(--accent-light); }
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      background: var(--surface2); border: 1px solid var(--border);
+      transition: opacity 0.2s;
+    }
+    .task-item.done { opacity: 0.45; }
+    .task-item.done .task-text { text-decoration: line-through; }
+    .task-check {
+      width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+      border: 1.5px solid var(--border-hover); background: transparent;
+      cursor: pointer; appearance: none; transition: all 0.15s;
+    }
+    .task-check:checked { background: var(--accent); border-color: var(--accent); }
+    .task-text { flex: 1; font-size: 0.88rem; }
+    .task-del {
+      background: none; color: var(--muted); font-size: 1rem; padding: 2px 6px;
+      border-radius: 4px; transition: color 0.2s;
+    }
+    .task-del:hover { color: var(--coral); }
+    .task-empty { color: var(--muted); font-size: 0.88rem; text-align: center; padding: 2rem 0; }
+
+    /* ===== ARABIC KEYBOARD ===== */
+    .ar-display {
+      min-height: 80px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 1rem;
+      font-family: var(--font-ar); font-size: 1.5rem; direction: rtl;
+      color: var(--text); word-break: break-all; line-height: 1.8;
+    }
+    .ar-keyboard { display: flex; flex-direction: column; gap: 6px; }
+    .ar-row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+    .ar-key {
+      min-width: 38px; height: 44px; border-radius: 7px;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); font-family: var(--font-ar); font-size: 1.1rem;
+      cursor: pointer; transition: all 0.12s; display: flex; align-items: center; justify-content: center;
+    }
+    .ar-key:hover { background: var(--surface); border-color: var(--accent); color: var(--accent-light); }
+    .ar-key.wide { min-width: 70px; font-family: var(--font); font-size: 0.75rem; }
+    .ar-toolbar { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .ar-tool-btn {
+      padding: 7px 14px; border-radius: var(--radius-sm); font-size: 0.8rem;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+      transition: all 0.2s;
+    }
+    .ar-tool-btn:hover { border-color: var(--accent); color: var(--accent-light); }
+
+    /* ===== DU'A TOOL ===== */
+    .dua-nav { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .dua-cat-btn {
+      padding: 6px 14px; border-radius: 999px; font-size: 0.8rem;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+      transition: all 0.2s;
+    }
+    .dua-cat-btn.active { background: var(--accent-glow); border-color: rgba(124,106,247,0.4); color: var(--accent-light); }
+    .dua-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem; margin-bottom: 10px;
+    }
+    .dua-arabic {
+      font-family: var(--font-ar); font-size: 1.35rem; direction: rtl;
+      color: var(--amber); line-height: 2; margin-bottom: 0.75rem; text-align: right;
+    }
+    .dua-transliteration { font-size: 0.82rem; color: var(--teal); margin-bottom: 0.5rem; font-style: italic; }
+    .dua-translation { font-size: 0.85rem; color: var(--muted); }
+    .dua-source { font-size: 0.72rem; color: var(--border-hover); margin-top: 0.5rem; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      border-top: 1px solid var(--border); padding: 2rem 1.5rem;
+      text-align: center; color: var(--muted); font-size: 0.82rem;
+    }
+    footer a { color: var(--accent-light); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      nav { display: none; }
+      .hero { padding: 3rem 1rem 2rem; }
+      .tool-grid { padding: 0 1rem 3rem; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .modal { border-radius: 14px; }
+    }
+    @media (max-width: 380px) {
+      .tool-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🪺</div>
+      Tool<span>Nest</span>
+    </div>
+    <nav>
+      <a href="#tools">Tools</a>
+      <a href="#about">About</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">✦ Free · No sign-up · Always online</div>
+  <h1>Simple tools for <em>everyday needs</em></h1>
+  <p>A growing collection of mini-apps you can use right here — no download, no account required.</p>
+  <div class="hero-arabic" title="In the name of Allah, the Most Gracious, the Most Merciful">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+</section>
+
+<!-- AD BANNER (replace with Google AdSense script) -->
+<div class="ad-banner">
+  <div class="ad-placeholder">
+    <!-- Google AdSense: paste your ad unit code here -->
+    📢 Advertisement space · 728×90
+  </div>
+</div>
+
+<!-- CATEGORY FILTER -->
+<div class="categories" id="tools">
+  <button class="cat-btn active" data-cat="all">All Tools</button>
+  <button class="cat-btn" data-cat="productivity">Productivity</button>
+  <button class="cat-btn" data-cat="islamic">Islamic</button>
+  <button class="cat-btn" data-cat="games">Games</button>
+  <button class="cat-btn" data-cat="utilities">Utilities</button>
+</div>
+
+<!-- TOOL GRID -->
+<div class="tool-grid">
+
+  <!-- Task Manager -->
+  <div class="tool-card card-purple" data-cat="productivity" onclick="openTool('tasks')">
+    <div class="card-icon">✅</div>
+    <div class="card-title">Task Manager</div>
+    <div class="card-desc">Create, check off, and organize your daily tasks — saved in your browser.</div>
+    <div class="card-footer">
+      <span class="card-tag">Productivity</span>
+      <span class="card-cta">Open</span>
+    </div>
+  </div>
+
+  <!-- Arabic Keyboard -->
+  <div class="tool-card card-amber" data-cat="utilities" onclick="openTool('keyboard')">
+    <div class="card-icon">⌨️</div>
+    <div class="card-title">Arabic Keyboard</div>
+    <div class="card-desc">Type in Arabic and copy the text — perfect if you don't have an Arabic keyboard.</div>
+    <div class="card-footer">
+      <span class="card-tag">Utilities</span>
+      <span class="card-cta">Open</span>
+    </div>
+  </div>
+
+  <!-- Daily Du'a -->
+  <div class="tool-card card-teal" data-cat="islamic" onclick="openTool('dua')">
+    <div class="card-icon">🤲</div>
+    <div class="card-title">Daily Du'a</div>
+    <div class="card-desc">Browse authentic supplications for morning, evening, meals, travel, and more.</div>
+    <div class="card-footer">
+      <span class="card-tag">Islamic</span>
+      <span class="card-cta">Open</span>
+    </div>
+  </div>
+
+  <!-- Sudoku (coming soon — replace when you add your code) -->
+  <div class="tool-card card-coral coming-soon" data-cat="games">
+    <div class="card-icon">🔢</div>
+    <div class="card-title">Sudoku</div>
+    <div class="card-desc">Classic number puzzle with three difficulty levels. Train your logic daily.</div>
+    <div class="card-footer">
+      <span class="card-tag">Games</span>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="tool-card card-green coming-soon" data-cat="productivity">
+    <div class="card-icon">📝</div>
+    <div class="card-title">Quick Notes</div>
+    <div class="card-desc">Jot down anything and it stays in your browser. No sign-in needed.</div>
+    <div class="card-footer">
+      <span class="card-tag">Productivity</span>
+    </div>
+  </div>
+
+  <!-- Prayer Times -->
+  <div class="tool-card card-pink coming-soon" data-cat="islamic">
+    <div class="card-icon">🕌</div>
+    <div class="card-title">Prayer Times</div>
+    <div class="card-desc">Auto-detect your location and display today's five daily prayer times.</div>
+    <div class="card-footer">
+      <span class="card-tag">Islamic</span>
+    </div>
+  </div>
+
+  <!-- Word Game -->
+  <div class="tool-card card-purple coming-soon" data-cat="games">
+    <div class="card-icon">🔤</div>
+    <div class="card-title">Word Guess</div>
+    <div class="card-desc">Guess the hidden word in 6 tries — Wordle-style, in Arabic & English.</div>
+    <div class="card-footer">
+      <span class="card-tag">Games</span>
+    </div>
+  </div>
+
+  <!-- Unit Converter -->
+  <div class="tool-card card-teal coming-soon" data-cat="utilities">
+    <div class="card-icon">📐</div>
+    <div class="card-title">Unit Converter</div>
+    <div class="card-desc">Convert between length, weight, temperature, currency and more instantly.</div>
+    <div class="card-footer">
+      <span class="card-tag">Utilities</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- AD BANNER (bottom) -->
+<div class="ad-banner" style="margin-bottom:3rem;">
+  <div class="ad-placeholder">
+    <!-- Google AdSense: paste your ad unit code here -->
+    📢 Advertisement space · 728×90
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about" style="max-width:1100px;margin:0 auto 3rem;padding:0 1.5rem;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;">
+    <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:.75rem;">About ToolNest</h2>
+    <p style="color:var(--muted);font-size:.88rem;line-height:1.75;max-width:640px;">
+      ToolNest is a free collection of everyday mini-apps — no account, no ads trackers, no nonsense.
+      New tools are added regularly. Have a tool idea? Every suggestion is welcome.
+      Built with care for Arabic and English speakers alike.
+    </p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 ToolNest · Free forever · <a href="#">Suggest a tool</a> · Hosted on GitHub Pages</p>
+</footer>
+
+<!-- ===== MODAL ===== -->
+<div class="modal-overlay" id="modal" onclick="closeOnOverlay(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Tool</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+
+<script>
+/* ===== CATEGORY FILTER ===== */
+document.querySelectorAll('.cat-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const cat = btn.dataset.cat;
+    document.querySelectorAll('.tool-card').forEach(card => {
+      if (cat === 'all' || card.dataset.cat === cat) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+});
+
+/* ===== MODAL ===== */
+function openTool(id) {
+  const overlay = document.getElementById('modal');
+  const title = document.getElementById('modal-title');
+  const body = document.getElementById('modal-body');
+  const builders = { tasks: buildTasks, keyboard: buildKeyboard, dua: buildDua };
+  if (!builders[id]) return;
+  const t = builders[id]();
+  title.innerHTML = t.title;
+  body.innerHTML = t.html;
+  overlay.classList.add('open');
+  if (t.init) setTimeout(t.init, 10);
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeOnOverlay(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ===================================
+   TOOL 1 — TASK MANAGER
+=================================== */
+function buildTasks() {
+  return {
+    title: '✅ Task Manager',
+    html: `
+      <div class="task-input-row">
+        <input class="task-input" id="task-in" type="text" placeholder="Add a new task…" />
+        <button class="task-add-btn" onclick="addTask()">Add</button>
+      </div>
+      <div class="task-filters">
+        <button class="tf-btn active" onclick="filterTasks('all',this)">All</button>
+        <button class="tf-btn" onclick="filterTasks('active',this)">Active</button>
+        <button class="tf-btn" onclick="filterTasks('done',this)">Done</button>
+      </div>
+      <div class="task-list" id="task-list"></div>
+    `,
+    init: renderTasks
+  };
+}
+
+let taskFilter = 'all';
+function getTasks() { try { return JSON.parse(localStorage.getItem('tn_tasks') || '[]'); } catch { return []; } }
+function saveTasks(t) { localStorage.setItem('tn_tasks', JSON.stringify(t)); }
+
+function addTask() {
+  const inp = document.getElementById('task-in');
+  const text = inp.value.trim();
+  if (!text) return;
+  const tasks = getTasks();
+  tasks.unshift({ id: Date.now(), text, done: false });
+  saveTasks(tasks);
+  inp.value = '';
+  renderTasks();
+}
+document.addEventListener('keydown', e => {
+  const inp = document.getElementById('task-in');
+  if (inp && document.activeElement === inp && e.key === 'Enter') addTask();
+});
+
+function toggleTask(id) {
+  const tasks = getTasks().map(t => t.id === id ? { ...t, done: !t.done } : t);
+  saveTasks(tasks); renderTasks();
+}
+function deleteTask(id) {
+  saveTasks(getTasks().filter(t => t.id !== id)); renderTasks();
+}
+function filterTasks(f, btn) {
+  taskFilter = f;
+  document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTasks();
+}
+function renderTasks() {
+  const list = document.getElementById('task-list');
+  if (!list) return;
+  let tasks = getTasks();
+  if (taskFilter === 'active') tasks = tasks.filter(t => !t.done);
+  if (taskFilter === 'done') tasks = tasks.filter(t => t.done);
+  if (!tasks.length) {
+    list.innerHTML = '<div class="task-empty">No tasks here yet.</div>'; return;
+  }
+  list.innerHTML = tasks.map(t => `
+    <div class="task-item ${t.done ? 'done' : ''}">
+      <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onchange="toggleTask(${t.id})" />
+      <span class="task-text">${escHtml(t.text)}</span>
+      <button class="task-del" onclick="deleteTask(${t.id})">✕</button>
+    </div>
+  `).join('');
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ===================================
+   TOOL 2 — ARABIC KEYBOARD
+=================================== */
+function buildKeyboard() {
+  return {
+    title: '⌨️ Arabic Keyboard',
+    html: `
+      <div class="ar-toolbar">
+        <button class="ar-tool-btn" onclick="arCopy()">Copy text</button>
+        <button class="ar-tool-btn" onclick="arClear()">Clear</button>
+      </div>
+      <div class="ar-display" id="ar-display" dir="rtl" contenteditable="true" spellcheck="false"></div>
+      <div class="ar-keyboard">
+        <div class="ar-row">
+          ${['ض','ص','ث','ق','ف','غ','ع','ه','خ','ح','ج','د'].map(k=>`<button class="ar-key" onclick="arType('${k}')">${k}</button>`).join('')}
+        </div>
+        <div class="ar-row">
+          ${['ش','س','ي','ب','ل','ا','ت','ن','م','ك','ط','ذ'].map(k=>`<button class="ar-key" onclick="arType('${k}')">${k}</button>`).join('')}
+        </div>
+        <div class="ar-row">
+          ${['ئ','ء','ؤ','ر','لا','ى','ة','و','ز','ظ'].map(k=>`<button class="ar-key" onclick="arType('${k}')">${k}</button>`).join('')}
+        </div>
+        <div class="ar-row">
+          <button class="ar-key wide" onclick="arType(' ')">Space</button>
+          <button class="ar-key wide" onclick="arBackspace()">⌫ Del</button>
+          <button class="ar-key wide" onclick="arType('\n')">↵ Enter</button>
+        </div>
+        <div class="ar-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">
+          <span style="font-size:0.75rem;color:var(--muted);padding:4px 8px;">Tashkeel:</span>
+          ${[['َ','Fatha'],['ِ','Kasra'],['ُ','Damma'],['ْ','Sukun'],['ّ','Shadda'],['ً','Tanwin F'],['ٍ','Tanwin K'],['ٌ','Tanwin D']].map(([k,l])=>`<button class="ar-key" title="${l}" onclick="arType('${k}')">${k || '◌'+k}</button>`).join('')}
+        </div>
+      </div>
+    `,
+    init: () => {}
+  };
+}
+function arType(ch) {
+  const d = document.getElementById('ar-display');
+  if (!d) return;
+  if (ch === '\n') { d.innerHTML += '<br>'; } else { d.textContent += ch; }
+}
+function arBackspace() {
+  const d = document.getElementById('ar-display');
+  if (!d) return;
+  d.textContent = d.textContent.slice(0, -1);
+}
+function arCopy() {
+  const d = document.getElementById('ar-display');
+  if (!d) return;
+  navigator.clipboard.writeText(d.textContent).then(() => {
+    const btn = event.target; btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy text', 1500);
+  });
+}
+function arClear() {
+  const d = document.getElementById('ar-display'); if (d) d.textContent = '';
+}
+
+/* ===================================
+   TOOL 3 — DAILY DU'A
+=================================== */
+const duaData = {
+  morning: [
+    {
+      ar: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ',
+      tr: 'Asbahna wa asbahal mulku lillah, walhamdu lillah',
+      en: 'We have reached the morning and at this very time unto Allah belongs all sovereignty, and all praise is for Allah.',
+      src: 'Abu Dawud 4/317'
+    },
+    {
+      ar: 'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ',
+      tr: 'Allahumma bika asbahna, wa bika amsayna, wa bika nahya, wa bika namutu, wa ilaykan-nushur',
+      en: 'O Allah, by You we enter the morning and by You we enter the evening, by You we live and by You we die, and to You is the resurrection.',
+      src: 'Abu Dawud, Tirmidhi'
+    }
+  ],
+  evening: [
+    {
+      ar: 'أَمْسَيْنَا وَأَمْسَى الْمُلْكُ للهِ، وَالْحَمْدُ للهِ',
+      tr: 'Amsayna wa amsal mulku lillah, walhamdu lillah',
+      en: 'We have reached the evening and at this very time unto Allah belongs all sovereignty, and all praise is for Allah.',
+      src: 'Abu Dawud 4/317'
+    }
+  ],
+  food: [
+    {
+      ar: 'بِسْمِ اللَّهِ',
+      tr: 'Bismillah',
+      en: 'In the name of Allah. (Said before eating)',
+      src: 'Bukhari, Muslim'
+    },
+    {
+      ar: 'الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنِي هَذَا وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ',
+      tr: "Alhamdu lillahil-ladhi at'amani hadha wa razaqanihi min ghayri hawlin minni wa la quwwah",
+      en: 'Praise be to Allah Who has fed me this and provided it for me without any might or power on my part.',
+      src: 'Abu Dawud, Tirmidhi'
+    }
+  ],
+  travel: [
+    {
+      ar: 'سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ وَإِنَّا إِلَى رَبِّنَا لَمُنقَلِبُونَ',
+      tr: "Subhanal-ladhi sakhkhara lana hadha wa ma kunna lahu muqrinin. Wa inna ila Rabbina lamunqalibun",
+      en: 'Glory be to Him Who has subjected this to us, and we were not able to do it, and surely to our Lord we must return.',
+      src: 'Abu Dawud 3/34'
+    }
+  ]
+};
+
+function buildDua() {
+  return {
+    title: '🤲 Daily Du\'a',
+    html: `
+      <div class="dua-nav">
+        <button class="dua-cat-btn active" onclick="showDua('morning',this)">🌅 Morning</button>
+        <button class="dua-cat-btn" onclick="showDua('evening',this)">🌙 Evening</button>
+        <button class="dua-cat-btn" onclick="showDua('food',this)">🍽️ Food</button>
+        <button class="dua-cat-btn" onclick="showDua('travel',this)">✈️ Travel</button>
+      </div>
+      <div id="dua-cards"></div>
+    `,
+    init: () => showDua('morning', document.querySelector('.dua-cat-btn'))
+  };
+}
+function showDua(cat, btn) {
+  document.querySelectorAll('.dua-cat-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const cards = document.getElementById('dua-cards');
+  if (!cards) return;
+  cards.innerHTML = (duaData[cat] || []).map(d => `
+    <div class="dua-card">
+      <div class="dua-arabic">${d.ar}</div>
+      <div class="dua-transliteration">${d.tr}</div>
+      <div class="dua-translation">${d.en}</div>
+      <div class="dua-source">Source: ${d.src}</div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>

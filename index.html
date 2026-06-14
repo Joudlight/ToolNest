@@ -434,7 +434,9 @@
   </section>
 
   <!-- FOOTER -->
-  <footer><p>© 2025 ToolNest · Free forever · <a href="#">Suggest a tool</a> · Hosted on GitHub Pages</p></footer>
+  <footer style="text-align:center;padding:1.5rem;color:var(--muted);font-size:0.8rem;border-top:1px solid var(--border);">
+    <p>© 2025 ToolNest · Free forever · <a href="#" style="text-decoration:underline;">Suggest a tool</a> · Hosted on GitHub Pages</p>
+  </footer>
 
   <!-- BACK TO TOP -->
   <button class="back-to-top" id="backToTop">↑</button>
@@ -756,7 +758,7 @@
     function nmSubmit() { if(nmState.showing) return; const input=document.getElementById('nm-input'); const val=input.value.trim(); const fb=document.getElementById('nm-feedback'); if(val===nmState.sequence) { nmState.level++; fb.textContent='✅ Correct! Level '+nmState.level; fb.className='math-feedback correct'; if(nmState.level>nmState.bestLevel) { nmState.bestLevel=nmState.level; localStorage.setItem('nm_best',nmState.bestLevel); document.getElementById('nm-best').textContent=nmState.bestLevel; } input.value=''; setTimeout(()=>nmShowSequence(),800); } else { fb.textContent='❌ Wrong! The sequence was: '+nmState.sequence; fb.className='math-feedback wrong'; document.getElementById('nm-start-btn').disabled=false; document.getElementById('nm-input').disabled=true; document.getElementById('nm-submit-btn').disabled=true; } }
 
     /* ==========================================
-       SUDOKU (iframe with full Sudoku Zen)
+       SUDOKU (iframe with FULL WORKING SUDOKU ZEN)
     ========================================== */
     function openSudokuApp() {
       document.getElementById('sudoku-overlay').style.display = 'block';
@@ -777,7 +779,6 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-BN4NGBRDSQ');
 <\/script>
 <meta charset="UTF-8">
@@ -833,7 +834,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div style="height:3px;width:60px;background:var(--accent);margin:20px auto"></div>
     <div style="font-size:13px;letter-spacing:2px;color:#666">Daily Mind Training</div>
     <div style="margin-top:30px;display:flex;flex-direction:column;gap:14px;align-items:center">
-      <button class="welcome-btn primary disabled" id="continueBtn" onclick="handleContinue(event)">▶ Continue Game</button>
+      <button class="welcome-btn primary" id="continueBtn" onclick="handleContinue(event)">▶ Continue Game</button>
       <button class="welcome-btn secondary" onclick="showDifficultyScreen(event)">✦ New Game</button>
     </div>
   </div>
@@ -887,16 +888,566 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 <script>
-// FULL SUDOKU ZEN LOGIC (identical to your provided Sudoku code)
-const Storage = { /* ... same ... */ };
+// ============== STORAGE ==============
 const SAVE_KEY = 'sudoku_zen_save';
-const Sound = { /* ... same ... */ };
-// ... (all game functions, exactly as before) ...
-// final init:
-buildBoard();
-buildNumpad();
-checkSavedGame();
+function saveGame() {
+  if (!gameState.puzzle) return;
+  const save = {
+    puzzle: gameState.puzzle,
+    solution: gameState.solution,
+    userGrid: gameState.userGrid,
+    notesGrid: gameState.notesGrid,
+    difficulty: gameState.difficulty,
+    time: gameState.time,
+    mistakes: gameState.mistakes,
+    hintsRemaining: gameState.hintsRemaining,
+    score: gameState.score,
+    started: gameState.started
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+}
+function loadGame() {
+  const data = localStorage.getItem(SAVE_KEY);
+  if (!data) return null;
+  try { return JSON.parse(data); } catch(e) { return null; }
+}
+function clearSave() { localStorage.removeItem(SAVE_KEY); }
+
+const Sound = { play: (name) => {} };
+
+let gameState = {
+  puzzle: null,
+  solution: null,
+  userGrid: null,
+  notesGrid: null,
+  difficulty: 'easy',
+  time: 0,
+  timerInterval: null,
+  selectedCell: null,
+  noteMode: false,
+  mistakes: 0,
+  maxMistakes: 3,
+  hintsRemaining: 3,
+  score: 0,
+  started: false
+};
+
+// ============== PUZZLE GENERATOR ==============
+function generatePuzzle(difficulty) {
+  const solution = [];
+  for(let i=0;i<9;i++){ solution[i]=Array(9).fill(0); }
+  solveSudoku(solution);
+  const puzzle = solution.map(row => [...row]);
+  let cellsToRemove;
+  switch(difficulty) {
+    case 'easy': cellsToRemove = 40; break;
+    case 'medium': cellsToRemove = 48; break;
+    case 'hard': cellsToRemove = 54; break;
+    case 'expert': cellsToRemove = 58; break;
+    default: cellsToRemove = 40;
+  }
+  let removed = 0;
+  const indices = [];
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++) indices.push({r,c});
+  shuffleArray(indices);
+  for(const {r,c} of indices) {
+    if(removed >= cellsToRemove) break;
+    const backup = puzzle[r][c];
+    puzzle[r][c] = 0;
+    removed++;
+  }
+  return { puzzle, solution };
+}
+
+function solveSudoku(board) {
+  const empty = findEmpty(board);
+  if (!empty) return true;
+  const [r,c] = empty;
+  const nums = [1,2,3,4,5,6,7,8,9];
+  shuffleArray(nums);
+  for(const num of nums) {
+    if (isValid(board, r, c, num)) {
+      board[r][c] = num;
+      if (solveSudoku(board)) return true;
+      board[r][c] = 0;
+    }
+  }
+  return false;
+}
+
+function findEmpty(board) {
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(board[r][c]===0) return [r,c];
+  return null;
+}
+
+function isValid(board, r, c, num) {
+  for(let i=0;i<9;i++) {
+    if (board[r][i] === num && i!==c) return false;
+    if (board[i][c] === num && i!==r) return false;
+  }
+  const boxRow = Math.floor(r/3)*3;
+  const boxCol = Math.floor(c/3)*3;
+  for(let i=boxRow;i<boxRow+3;i++) {
+    for(let j=boxCol;j<boxCol+3;j++) {
+      if(board[i][j]===num && (i!==r || j!==c)) return false;
+    }
+  }
+  return true;
+}
+
+function shuffleArray(arr) {
+  for(let i=arr.length-1;i>0;i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+}
+
+// ============== UI HELPERS ==============
+function showScreen(id) {
+  document.querySelectorAll('.screen-overlay').forEach(el => el.classList.remove('visible'));
+  document.getElementById(id).classList.add('visible');
+}
+
+function hideAllScreens() {
+  document.querySelectorAll('.screen-overlay').forEach(el => el.classList.remove('visible'));
+  document.getElementById('app').style.display = 'none';
+}
+
+function showGameUI() {
+  hideAllScreens();
+  document.getElementById('app').style.display = 'flex';
+}
+
+function goToMenu(e) {
+  e && e.stopPropagation();
+  stopTimer();
+  saveGame();
+  showScreen('welcomeScreen');
+  updateContinueButton();
+}
+
+function showWelcomeScreen(e) {
+  e && e.stopPropagation();
+  hideAllScreens();
+  showScreen('welcomeScreen');
+  updateContinueButton();
+}
+
+function showDifficultyScreen(e) {
+  e && e.stopPropagation();
+  hideAllScreens();
+  showScreen('difficultyScreen');
+  rebuildDiffCards();
+}
+
+function rebuildDiffCards() {
+  const container = document.getElementById('diffCards');
+  const diffs = [
+    {name:'Easy', emoji:'😊', cells:40},
+    {name:'Medium', emoji:'🤔', cells:48},
+    {name:'Hard', emoji:'😤', cells:54},
+    {name:'Expert', emoji:'🔥', cells:58}
+  ];
+  container.innerHTML = diffs.map(d => \`
+    <div class="diff-card" onclick="startNewGame('\${d.name.toLowerCase()}')">
+      <div style="font-size:36px">\${d.emoji}</div>
+      <div style="font-weight:600;margin:8px 0">\${d.name}</div>
+      <div style="font-size:12px;color:#666">\${d.cells} empty cells</div>
+    </div>
+  \`).join('');
+}
+
+function updateContinueButton() {
+  const saved = loadGame();
+  const btn = document.getElementById('continueBtn');
+  if (saved && saved.puzzle) {
+    btn.disabled = false;
+    btn.classList.remove('disabled');
+  } else {
+    btn.disabled = true;
+    btn.classList.add('disabled');
+  }
+}
+
+function handleContinue(e) {
+  e && e.stopPropagation();
+  const saved = loadGame();
+  if (!saved) return;
+  stopTimer();
+  gameState.puzzle = saved.puzzle;
+  gameState.solution = saved.solution;
+  gameState.userGrid = saved.userGrid;
+  gameState.notesGrid = saved.notesGrid;
+  gameState.difficulty = saved.difficulty;
+  gameState.time = saved.time || 0;
+  gameState.mistakes = saved.mistakes || 0;
+  gameState.hintsRemaining = saved.hintsRemaining || 3;
+  gameState.score = saved.score || 0;
+  gameState.started = true;
+  gameState.selectedCell = null;
+  gameState.noteMode = false;
+  document.getElementById('noteBtn').classList.remove('active');
+  document.getElementById('noteLabel').textContent = '(OFF)';
+  document.getElementById('diffLabel').textContent = capitalize(saved.difficulty);
+  document.getElementById('timerDisplay').textContent = formatTime(gameState.time);
+  document.getElementById('mistakeDisplay').textContent = gameState.mistakes;
+  document.getElementById('scoreDisplay').textContent = gameState.score;
+  document.getElementById('hintCount').textContent = gameState.hintsRemaining + ' left';
+  showGameUI();
+  buildBoard();
+  buildNumpad();
+  startTimer();
+}
+
+function startNewGame(difficulty) {
+  const {puzzle, solution} = generatePuzzle(difficulty);
+  const userGrid = puzzle.map(row => [...row]);
+  const notesGrid = Array(9).fill().map(()=>Array(9).fill().map(()=>[]));
+  stopTimer();
+  gameState = {
+    ...gameState,
+    puzzle,
+    solution,
+    userGrid,
+    notesGrid,
+    difficulty,
+    time: 0,
+    mistakes: 0,
+    hintsRemaining: 3,
+    score: 0,
+    started: false,
+    selectedCell: null,
+    noteMode: false
+  };
+  clearSave();
+  document.getElementById('diffLabel').textContent = capitalize(difficulty);
+  document.getElementById('timerDisplay').textContent = '00:00';
+  document.getElementById('mistakeDisplay').textContent = '0';
+  document.getElementById('scoreDisplay').textContent = '0';
+  document.getElementById('hintCount').textContent = '3 left';
+  document.getElementById('noteBtn').classList.remove('active');
+  document.getElementById('noteLabel').textContent = '(OFF)';
+  showCountdown(() => {
+    gameState.started = true;
+    showGameUI();
+    buildBoard();
+    buildNumpad();
+    startTimer();
+  });
+}
+
+function showCountdown(callback) {
+  hideAllScreens();
+  const overlay = document.getElementById('countdownOverlay');
+  const numDisplay = document.getElementById('countdownNum');
+  overlay.classList.add('visible');
+  let count = 3;
+  numDisplay.textContent = count;
+  const interval = setInterval(() => {
+    count--;
+    if (count <= 0) {
+      clearInterval(interval);
+      overlay.classList.remove('visible');
+      callback();
+    } else {
+      numDisplay.textContent = count;
+    }
+  }, 500);
+}
+
+// ============== TIMER ==============
+function startTimer() {
+  stopTimer();
+  gameState.timerInterval = setInterval(() => {
+    gameState.time++;
+    document.getElementById('timerDisplay').textContent = formatTime(gameState.time);
+    saveGame();
+  }, 1000);
+}
+
+function stopTimer() {
+  if (gameState.timerInterval) {
+    clearInterval(gameState.timerInterval);
+    gameState.timerInterval = null;
+  }
+}
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return \`\${m.toString().padStart(2,'0')}:\${s.toString().padStart(2,'0')}\`;
+}
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// ============== BOARD RENDERING ==============
+function buildBoard() {
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.addEventListener('click', () => cellClicked(r, c));
+      boardEl.appendChild(cell);
+    }
+  }
+  updateBoard();
+}
+
+function updateBoard() {
+  const cells = document.querySelectorAll('#board .cell');
+  cells.forEach(cell => {
+    const r = parseInt(cell.dataset.row);
+    const c = parseInt(cell.dataset.col);
+    const val = gameState.userGrid[r][c];
+    const given = gameState.puzzle[r][c] !== 0;
+    cell.innerHTML = '';
+    cell.classList.remove('selected', 'highlighted', 'same-number', 'error');
+    if (gameState.selectedCell && gameState.selectedCell.r === r && gameState.selectedCell.c === c) {
+      cell.classList.add('selected');
+    } else if (gameState.selectedCell &&
+               (gameState.selectedCell.r === r || gameState.selectedCell.c === c ||
+                (Math.floor(r/3) === Math.floor(gameState.selectedCell.r/3) &&
+                 Math.floor(c/3) === Math.floor(gameState.selectedCell.c/3)))) {
+      cell.classList.add('highlighted');
+    }
+    if (gameState.selectedCell && val !== 0 &&
+        gameState.userGrid[gameState.selectedCell.r][gameState.selectedCell.c] !== 0 &&
+        val === gameState.userGrid[gameState.selectedCell.r][gameState.selectedCell.c]) {
+      cell.classList.add('same-number');
+    }
+    if (val !== 0 && gameState.solution && val !== gameState.solution[r][c]) {
+      cell.classList.add('error');
+    }
+    if (val !== 0) {
+      const span = document.createElement('span');
+      span.textContent = val;
+      span.style.color = given ? 'var(--given)' : 'var(--user)';
+      cell.appendChild(span);
+    } else {
+      const notes = gameState.notesGrid[r][c];
+      if (notes.length > 0) {
+        const notesDiv = document.createElement('div');
+        notesDiv.className = 'cell-notes';
+        for (let i = 1; i <= 9; i++) {
+          const noteCell = document.createElement('span');
+          noteCell.style.display = 'flex';
+          noteCell.style.alignItems = 'center';
+          noteCell.style.justifyContent = 'center';
+          noteCell.textContent = notes.includes(i) ? i : '';
+          notesDiv.appendChild(noteCell);
+        }
+        cell.appendChild(notesDiv);
+      }
+    }
+  });
+}
+
+function buildNumpad() {
+  const pad = document.getElementById('numpad');
+  pad.innerHTML = '';
+  for (let i = 1; i <= 9; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'num-btn';
+    btn.textContent = i;
+    btn.onclick = (e) => { e.stopPropagation(); enterNumber(i); };
+    pad.appendChild(btn);
+  }
+}
+
+// ============== INTERACTION ==============
+function cellClicked(r, c) {
+  if (!gameState.started) return;
+  gameState.selectedCell = { r, c };
+  updateBoard();
+}
+
+function enterNumber(num) {
+  if (!gameState.selectedCell || !gameState.started) return;
+  const { r, c } = gameState.selectedCell;
+  if (gameState.puzzle[r][c] !== 0) return;
+  if (gameState.noteMode) {
+    toggleNote(r, c, num);
+  } else {
+    setNumber(r, c, num);
+  }
+  updateBoard();
+  checkWin();
+}
+
+function setNumber(r, c, num) {
+  const oldVal = gameState.userGrid[r][c];
+  if (oldVal === num) return;
+  gameState.userGrid[r][c] = num;
+  gameState.notesGrid[r][c] = [];
+  clearNotesConflicting(r, c, num);
+  if (num !== gameState.solution[r][c]) {
+    gameState.mistakes++;
+    document.getElementById('mistakeDisplay').textContent = gameState.mistakes;
+    if (gameState.mistakes >= gameState.maxMistakes) {
+      gameOver();
+    }
+  } else {
+    gameState.score += 10;
+    document.getElementById('scoreDisplay').textContent = gameState.score;
+  }
+  saveGame();
+}
+
+function toggleNote(r, c, num) {
+  const notes = gameState.notesGrid[r][c];
+  const idx = notes.indexOf(num);
+  if (idx > -1) notes.splice(idx, 1);
+  else notes.push(num);
+  saveGame();
+}
+
+function clearNotesConflicting(r, c, num) {
+  for (let i = 0; i < 9; i++) {
+    if (gameState.userGrid[r][i] === 0) {
+      const notes = gameState.notesGrid[r][i];
+      const idx = notes.indexOf(num);
+      if (idx > -1) notes.splice(idx, 1);
+    }
+    if (gameState.userGrid[i][c] === 0) {
+      const notes = gameState.notesGrid[i][c];
+      const idx = notes.indexOf(num);
+      if (idx > -1) notes.splice(idx, 1);
+    }
+  }
+  const boxRow = Math.floor(r/3)*3;
+  const boxCol = Math.floor(c/3)*3;
+  for (let i = boxRow; i < boxRow+3; i++) {
+    for (let j = boxCol; j < boxCol+3; j++) {
+      if (gameState.userGrid[i][j] === 0) {
+        const notes = gameState.notesGrid[i][j];
+        const idx = notes.indexOf(num);
+        if (idx > -1) notes.splice(idx, 1);
+      }
+    }
+  }
+}
+
+function toggleNoteMode(e) {
+  e.stopPropagation();
+  gameState.noteMode = !gameState.noteMode;
+  const btn = document.getElementById('noteBtn');
+  const label = document.getElementById('noteLabel');
+  if (gameState.noteMode) {
+    btn.classList.add('active');
+    label.textContent = '(ON)';
+  } else {
+    btn.classList.remove('active');
+    label.textContent = '(OFF)';
+  }
+}
+
+function eraseCell(e) {
+  e.stopPropagation();
+  if (!gameState.selectedCell) return;
+  const { r, c } = gameState.selectedCell;
+  if (gameState.puzzle[r][c] !== 0) return;
+  gameState.userGrid[r][c] = 0;
+  gameState.notesGrid[r][c] = [];
+  updateBoard();
+  saveGame();
+}
+
+function useHint(e) {
+  e.stopPropagation();
+  if (gameState.hintsRemaining <= 0) return;
+  if (!gameState.selectedCell) return;
+  const { r, c } = gameState.selectedCell;
+  if (gameState.puzzle[r][c] !== 0) return;
+  if (gameState.userGrid[r][c] !== 0) return;
+  const correct = gameState.solution[r][c];
+  gameState.userGrid[r][c] = correct;
+  gameState.notesGrid[r][c] = [];
+  gameState.hintsRemaining--;
+  document.getElementById('hintCount').textContent = gameState.hintsRemaining + ' left';
+  updateBoard();
+  saveGame();
+  checkWin();
+}
+
+function gameOver() {
+  stopTimer();
+  clearSave();
+  document.getElementById('modalIcon').textContent = '😞';
+  document.getElementById('modalTitle').textContent = 'Game Over';
+  document.getElementById('modalText').textContent = 'You made 3 mistakes. Better luck next time!';
+  document.getElementById('winTime').textContent = formatTime(gameState.time);
+  document.getElementById('winMistakes').textContent = gameState.mistakes;
+  document.getElementById('winScore').textContent = gameState.score;
+  document.getElementById('winOverlay').style.display = 'flex';
+}
+
+function checkWin() {
+  const isComplete = gameState.userGrid.every((row, r) => row.every((val, c) => val !== 0 && val === gameState.solution[r][c]));
+  if (isComplete) {
+    stopTimer();
+    clearSave();
+    gameState.score += 100;
+    document.getElementById('scoreDisplay').textContent = gameState.score;
+    document.getElementById('winTime').textContent = formatTime(gameState.time);
+    document.getElementById('winMistakes').textContent = gameState.mistakes;
+    document.getElementById('winScore').textContent = gameState.score;
+    document.getElementById('winOverlay').style.display = 'flex';
+  }
+}
+
+function playAgainFromWin() {
+  document.getElementById('winOverlay').style.display = 'none';
+  startNewGame(gameState.difficulty);
+}
+
+function menuFromWin() {
+  document.getElementById('winOverlay').style.display = 'none';
+  goToMenu();
+}
+
+// ============== INITIAL SETUP ==============
+updateContinueButton();
 rebuildDiffCards();
+
+document.addEventListener('keydown', (e) => {
+  if (!gameState.started) return;
+  const key = e.key;
+  if (key >= '1' && key <= '9') {
+    e.preventDefault();
+    enterNumber(parseInt(key));
+  } else if (key === 'Backspace' || key === 'Delete') {
+    e.preventDefault();
+    eraseCell(e);
+  } else if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+    e.preventDefault();
+    if (!gameState.selectedCell) return;
+    let { r, c } = gameState.selectedCell;
+    if (key === 'ArrowUp') r = Math.max(0, r-1);
+    else if (key === 'ArrowDown') r = Math.min(8, r+1);
+    else if (key === 'ArrowLeft') c = Math.max(0, c-1);
+    else if (key === 'ArrowRight') c = Math.min(8, c+1);
+    gameState.selectedCell = { r, c };
+    updateBoard();
+  } else if (key === 'n' || key === 'N') {
+    e.preventDefault();
+    toggleNoteMode(e);
+  }
+});
+
+const origSaveGame = saveGame;
+saveGame = function() {
+  origSaveGame();
+  const indicator = document.getElementById('saveIndicator');
+  indicator.classList.add('show');
+  clearTimeout(indicator._timeout);
+  indicator._timeout = setTimeout(() => indicator.classList.remove('show'), 1200);
+};
 <\/script>
 </body>
 </html>`;

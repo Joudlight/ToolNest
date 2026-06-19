@@ -1,3 +1,0 @@
-# Netlify SPA redirect — serves index.html for all tool URLs
-# so /sudoku, /dua, /keyboard etc. all load the app
-/*    /index.html   200

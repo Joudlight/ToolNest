@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ToolNest</title>
+  <!-- GitHub Pages SPA redirect trick -->
+  <script>
+    // Redirect /sudoku → /?tool=sudoku so the app can pick it up
+    var path = window.location.pathname.replace(/\/$/, '').replace('/', '');
+    if (path) {
+      window.location.replace('/?tool=' + encodeURIComponent(path));
+    } else {
+      window.location.replace('/');
+    }
+  </script>
+</head>
+<body></body>
+</html>
